@@ -12,5 +12,11 @@ class Settings(BaseSettings):
 
     pdf_storage_dir: str = "./data/filings"
 
+    notifications_enabled: bool = True
+    resend_api_key: str | None = None
+    notification_from_email: str | None = None
+    notification_to_emails: list[str] = []
+    slack_webhook_url: str | None = None
+
 
 settings = Settings()
