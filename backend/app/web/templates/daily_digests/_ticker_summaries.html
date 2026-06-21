@@ -1,0 +1,24 @@
+<table>
+  <thead>
+    <tr>
+      <th>Ticker</th>
+      <th>Count</th>
+      <th>Buys</th>
+      <th>Sells</th>
+      <th>Net Min Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ticker, summary in payload.get("ticker_summaries", {}).items() %}
+      <tr>
+        <td><strong>{{ ticker }}</strong></td>
+        <td>{{ summary.get("count", 0) }}</td>
+        <td>{{ summary.get("purchase_count", 0) }} · {{ summary.get("purchase_amount_min_total", "0") }}</td>
+        <td>{{ summary.get("sale_count", 0) }} · {{ summary.get("sale_amount_min_total", "0") }}</td>
+        <td>{{ summary.get("net_purchase_amount_min", "0") }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="empty-state">No ticker summaries.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

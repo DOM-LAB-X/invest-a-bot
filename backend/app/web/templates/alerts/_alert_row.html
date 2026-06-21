@@ -1,0 +1,84 @@
+<tr>
+  <td>
+    <div><strong>{{ alert.ticker_snapshot or "No ticker" }}</strong></div>
+    <div class="muted">{{ alert.filer_name_snapshot or "Unknown filer" }}</div>
+    <span class="badge badge-{{ alert.status.value }}">{{ alert.status.value|title }}</span>
+    {% if alert.needs_review_snapshot %}
+      <span class="badge badge-warn">Needs review</span>
+    {% endif %}
+  </td>
+  <td>
+    <div>{{ alert.transaction_type_snapshot or "transaction" }} · {{ alert.transaction_date_snapshot or "date unknown" }}</div>
+    <div class="muted">{{ alert.asset_name_snapshot or "Unknown asset" }}</div>
+    <div class="muted">
+      Amount:
+      {% if alert.amount_min_snapshot or alert.amount_max_snapshot %}
+        {{ alert.amount_min_snapshot or "?" }} - {{ alert.amount_max_snapshot or "?" }}
+      {% else %}
+        unknown
+      {% endif %}
+      {% if alert.filing_delay_days_snapshot is not none %}
+        · {{ alert.filing_delay_days_snapshot }} day filing delay
+      {% endif %}
+    </div>
+    {% if alert.source_url_snapshot %}
+      <a href="{{ alert.source_url_snapshot }}" target="_blank" rel="noopener">Source filing</a>
+    {% endif %}
+  </td>
+  <td>
+    <span class="badge badge-score">{{ "%.0f"|format(alert.score) }}</span>
+    {% if alert.parser_confidence_snapshot is not none %}
+      <div class="muted">Parser {{ "%.0f"|format(alert.parser_confidence_snapshot * 100) }}%</div>
+    {% endif %}
+    {% if alert.reasons %}
+      <details>
+        <summary>Reasons</summary>
+        <ul class="compact-list">
+          {% for key, value in alert.reasons.items() %}
+            <li><strong>{{ key }}:</strong> {{ value }}</li>
+          {% endfor %}
+        </ul>
+      </details>
+    {% endif %}
+  </td>
+  <td>
+    <details>
+      <summary>{{ enrichments|length }} enrichment{{ "" if enrichments|length == 1 else "s" }}</summary>
+      {% if enrichments %}
+        <ul class="compact-list">
+          {% for enrichment in enrichments %}
+            {% set item = enrichment.enrichment_item %}
+            <li>
+              <div>
+                <strong>{{ item.form_type or item.event_type }}</strong>
+                {% if item.filed_at %}· {{ item.filed_at.date() }}{% endif %}
+                · relevance {{ "%.0f"|format(enrichment.relevance_score) }}
+              </div>
+              <div class="muted">{{ item.title or item.summary or item.external_id }}</div>
+              {% if enrichment.reason %}
+                <div class="muted">{{ enrichment.reason }}</div>
+              {% endif %}
+              {% if item.url %}
+                <a href="{{ item.url }}" target="_blank" rel="noopener">Open filing</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="muted">No enrichment linked yet.</div>
+      {% endif %}
+    </details>
+  </td>
+  <td class="actions">
+    {% if alert.status.value != "read" %}
+      <form method="post" action="/dashboard/alerts/{{ alert.id }}/read" class="inline">
+        <button type="submit">Read</button>
+      </form>
+    {% endif %}
+    {% if alert.status.value != "dismissed" %}
+      <form method="post" action="/dashboard/alerts/{{ alert.id }}/dismiss" class="inline">
+        <button type="submit" class="danger">Dismiss</button>
+      </form>
+    {% endif %}
+  </td>
+</tr>

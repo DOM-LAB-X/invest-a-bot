@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Invest-A-Bot{% endblock %}</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Invest-A-Bot</div>
+    <nav>
+      <a href="/dashboard/profiles" class="{{ 'active' if active_nav == 'profiles' else '' }}">Profiles</a>
+      <a href="/dashboard/alerts" class="{{ 'active' if active_nav == 'alerts' else '' }}">Alerts</a>
+      <a href="/dashboard/daily-digests" class="{{ 'active' if active_nav == 'digests' else '' }}">Daily Digests</a>
+    </nav>
+  </header>
+  <main class="content">
+    {% if error %}
+      <div class="banner banner-error">{{ error }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">
+    Public disclosure data only. Not investment advice.
+  </footer>
+</body>
+</html>

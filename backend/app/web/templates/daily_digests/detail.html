@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Daily Digest · Invest-A-Bot{% endblock %}
+{% block content %}
+<p><a href="/dashboard/daily-digests">&larr; Back to daily digests</a></p>
+
+<h1>Daily Digest</h1>
+<div class="card">
+  <div><strong>{{ digest.digest_date }}</strong> · {{ digest.timezone }}</div>
+  <div class="muted">
+    {{ digest.scope.value|replace("_", " ")|title }}
+    {% if digest.profile_id %}· Profile {{ digest.profile_id }}{% endif %}
+    · {{ digest.status.value|title }}
+  </div>
+  {% if digest.generated_at %}
+    <div class="muted">Generated {{ digest.generated_at }}</div>
+  {% endif %}
+</div>
+
+{% if payload.get("scope") == "profile" %}
+  <h2>Profile Summary</h2>
+  <div class="card">
+    {% set profile = payload.get("profile", {}) %}
+    <div><strong>{{ profile.get("name", "Profile") }}</strong></div>
+    <div>{{ payload.get("alert_count", 0) }} matched alert{{ "" if payload.get("alert_count", 0) == 1 else "s" }}</div>
+    {% set stats = payload.get("filing_delay_stats", {}) %}
+    <div class="muted">
+      Filing delay: min {{ stats.get("min", "n/a") }}, max {{ stats.get("max", "n/a") }}, avg {{ stats.get("avg", "n/a") }}
+    </div>
+  </div>
+
+  <h2>Ticker Summaries</h2>
+  {% include "daily_digests/_ticker_summaries.html" %}
+
+  <h2>Top Alerts</h2>
+  <table>
+    <thead>
+      <tr><th>Ticker</th><th>Filer</th><th>Trade</th><th>Score</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for alert in payload.get("top_alerts", []) %}
+        <tr>
+          <td><strong>{{ alert.get("ticker") or "No ticker" }}</strong></td>
+          <td>{{ alert.get("filer_name") or "Unknown" }}</td>
+          <td>
+            {{ alert.get("transaction_type") or "transaction" }}
+            · {{ alert.get("amount_min") or "?" }} - {{ alert.get("amount_max") or "?" }}
+            <div class="muted">{{ alert.get("asset_name") }}</div>
+          </td>
+          <td><span class="badge badge-score">{{ alert.get("score") }}</span></td>
+          <td>
+            {% if alert.get("source_url") %}
+              <a href="{{ alert.get('source_url') }}" target="_blank" rel="noopener">Source</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="empty-state">No top alerts in this digest.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% elif payload.get("scope") == "cross_profile" %}
+  <h2>Cross-Profile Summary</h2>
+  <div class="card">
+    <div>{{ payload.get("transaction_count", 0) }} new clean disclosure{{ "" if payload.get("transaction_count", 0) == 1 else "s" }}</div>
+    {% set stats = payload.get("filing_delay_stats", {}) %}
+    <div class="muted">
+      Filing delay: min {{ stats.get("min", "n/a") }}, max {{ stats.get("max", "n/a") }}, avg {{ stats.get("avg", "n/a") }}
+    </div>
+  </div>
+
+  <h2>Ticker Summaries</h2>
+  {% include "daily_digests/_ticker_summaries.html" %}
+
+  <h2>Top Disclosures</h2>
+  <table>
+    <thead>
+      <tr><th>Ticker</th><th>Filer</th><th>Trade</th><th>Importance</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for disclosure in payload.get("top_disclosures", []) %}
+        <tr>
+          <td><strong>{{ disclosure.get("ticker") or "No ticker" }}</strong></td>
+          <td>{{ disclosure.get("filer_name") or "Unknown" }}</td>
+          <td>
+            {{ disclosure.get("transaction_type") or "transaction" }}
+            · {{ disclosure.get("amount_min") or "?" }} - {{ disclosure.get("amount_max") or "?" }}
+            <div class="muted">{{ disclosure.get("asset_name") }}</div>
+          </td>
+          <td><span class="badge badge-score">{{ disclosure.get("importance_score") }}</span></td>
+          <td>
+            {% if disclosure.get("source_url") %}
+              <a href="{{ disclosure.get('source_url') }}" target="_blank" rel="noopener">Source</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="empty-state">No top disclosures in this digest.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="card">No structured payload is available for this digest.</div>
+{% endif %}
+
+<h2>Raw Payload</h2>
+<details>
+  <summary>Show JSON</summary>
+  <pre class="json-block">{{ payload|tojson(indent=2) }}</pre>
+</details>
+{% endblock %}

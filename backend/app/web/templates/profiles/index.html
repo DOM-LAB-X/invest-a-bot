@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Profiles · Invest-A-Bot{% endblock %}
+{% block content %}
+<h1>Profiles</h1>
+<p>Profiles are saved rule sets watching specific politicians/tickers. Add or remove them below.</p>
+
+<table>
+  <thead>
+    <tr><th>Name</th><th>Status</th><th>Rules</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for profile in profiles %}
+      {% include "profiles/_profile_row.html" %}
+    {% else %}
+      <tr><td colspan="4" class="empty-state">No profiles yet. Create one below.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>New profile</h2>
+<div class="card">
+  <form method="post" action="/dashboard/profiles">
+    <div class="form-grid">
+      <div>
+        <label for="name">Profile name</label>
+        <input id="name" name="name" required placeholder="e.g. Mark Alford watch">
+      </div>
+      <div>
+        <label for="description">Description (optional)</label>
+        <input id="description" name="description">
+      </div>
+      <div>
+        <label for="filer_names">Filer names (comma-separated)</label>
+        <input id="filer_names" name="filer_names" placeholder="Mark Alford, Nancy Pelosi">
+      </div>
+      <div>
+        <label for="tickers">Tickers (comma-separated)</label>
+        <input id="tickers" name="tickers" placeholder="AMZN, AAPL">
+      </div>
+      <div>
+        <label for="transaction_types">Transaction types (comma-separated)</label>
+        <input id="transaction_types" name="transaction_types" placeholder="purchase, sale">
+      </div>
+      <div>
+        <label for="min_amount">Minimum amount</label>
+        <input id="min_amount" name="min_amount" type="number" step="0.01" placeholder="1000">
+      </div>
+    </div>
+    <p><button type="submit" class="primary">Create profile</button></p>
+  </form>
+</div>
+{% endblock %}

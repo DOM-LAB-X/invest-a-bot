@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Daily Digests · Invest-A-Bot{% endblock %}
+{% block content %}
+<h1>Daily Digests</h1>
+<p>Generated per-profile and cross-profile disclosure summaries.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Scope</th>
+      <th>Status</th>
+      <th>Summary</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for digest in digests %}
+      {% set payload = digest.payload or {} %}
+      <tr>
+        <td>
+          <strong>{{ digest.digest_date }}</strong>
+          <div class="muted">{{ digest.timezone }}</div>
+        </td>
+        <td>
+          {{ digest.scope.value|replace("_", " ")|title }}
+          {% if digest.profile_id %}
+            <div class="muted">{{ payload.get("profile", {}).get("name", "Profile " + digest.profile_id|string) }}</div>
+          {% endif %}
+        </td>
+        <td><span class="badge badge-active">{{ digest.status.value|title }}</span></td>
+        <td>
+          {% if payload.get("scope") == "profile" %}
+            {{ payload.get("alert_count", 0) }} matched alert{{ "" if payload.get("alert_count", 0) == 1 else "s" }}
+          {% elif payload.get("scope") == "cross_profile" %}
+            {{ payload.get("transaction_count", 0) }} disclosure{{ "" if payload.get("transaction_count", 0) == 1 else "s" }}
+          {% else %}
+            No payload summary available
+          {% endif %}
+        </td>
+        <td><a href="/dashboard/daily-digests/{{ digest.id }}">View</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="empty-state">No daily digests generated yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

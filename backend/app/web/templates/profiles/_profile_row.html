@@ -1,0 +1,38 @@
+<tr>
+  <td>
+    <strong>{{ profile.name }}</strong>
+    {% if profile.description %}<br><span style="color: var(--muted); font-size: 0.85rem;">{{ profile.description }}</span>{% endif %}
+  </td>
+  <td>
+    {% if profile.is_active %}
+      <span class="badge badge-active">active</span>
+    {% else %}
+      <span class="badge badge-inactive">inactive</span>
+    {% endif %}
+  </td>
+  <td>
+    {% for rule in profile.rules %}
+      <div style="font-size: 0.85rem; margin-bottom: 0.25rem;">
+        {% if rule.filer_names %}filers: {{ rule.filer_names | join(", ") }}{% endif %}
+        {% if rule.tickers %} · tickers: {{ rule.tickers | join(", ") }}{% endif %}
+        {% if rule.min_amount %} · min ${{ rule.min_amount }}{% endif %}
+      </div>
+    {% else %}
+      <span class="empty-state">no rules</span>
+    {% endfor %}
+  </td>
+  <td>
+    {% if profile.is_active %}
+      <form class="inline" method="post" action="/dashboard/profiles/{{ profile.id }}/deactivate">
+        <button type="submit">Deactivate</button>
+      </form>
+    {% else %}
+      <form class="inline" method="post" action="/dashboard/profiles/{{ profile.id }}/activate">
+        <button type="submit">Activate</button>
+      </form>
+    {% endif %}
+    <form class="inline" method="post" action="/dashboard/profiles/{{ profile.id }}/delete" onsubmit="return confirm('Delete this profile?');">
+      <button type="submit" class="danger">Delete</button>
+    </form>
+  </td>
+</tr>

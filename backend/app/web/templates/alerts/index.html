@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Alerts · Invest-A-Bot{% endblock %}
+{% block content %}
+<h1>Alerts</h1>
+<p>Newest matched profile alerts. Review trade snapshots, enrichment context, and mark alerts handled.</p>
+
+<form method="get" action="/dashboard/alerts" class="toolbar">
+  <label for="status">Status</label>
+  <select id="status" name="status">
+    <option value="" {{ 'selected' if not selected_status else '' }}>All</option>
+    {% for status in statuses %}
+      <option value="{{ status.value }}" {{ 'selected' if selected_status == status.value else '' }}>
+        {{ status.value|title }}
+      </option>
+    {% endfor %}
+  </select>
+  <button type="submit">Filter</button>
+</form>
+
+<table>
+  <thead>
+    <tr>
+      <th>Alert</th>
+      <th>Trade</th>
+      <th>Score</th>
+      <th>Context</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for alert in alerts %}
+      {% set enrichments = enrichments_by_alert_id.get(alert.id, []) %}
+      {% include "alerts/_alert_row.html" %}
+    {% else %}
+      <tr><td colspan="5" class="empty-state">No alerts match this filter.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
