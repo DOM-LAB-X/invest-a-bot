@@ -1,0 +1,12 @@
+.codex/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+backend/.env
+backend/data/
+
+# misc
+.DS_Store
