@@ -173,6 +173,20 @@ def sha256_bytes(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
+def existing_source_document_ids(session: Session, documents: list[SourceDocument]) -> set[str]:
+    source_document_ids = {document.source_document_id for document in documents}
+    if not source_document_ids:
+        return set()
+
+    rows = session.execute(
+        select(FilingDocument.source_document_id).where(
+            FilingDocument.source == HOUSE_SOURCE,
+            FilingDocument.source_document_id.in_(source_document_ids),
+        )
+    )
+    return set(rows.scalars().all())
+
+
 class HouseClerkAdapter(DisclosureIngestionAdapter):
     source = HOUSE_SOURCE
 
@@ -266,8 +280,13 @@ class HouseClerkAdapter(DisclosureIngestionAdapter):
         result = IngestionResult()
         documents = self.fetch_index(year)
         result.discovered = len(documents)
+        existing_doc_ids = existing_source_document_ids(session, documents)
 
         for document in documents:
+            if document.source_document_id in existing_doc_ids:
+                result.skipped += 1
+                continue
+
             try:
                 content = self.download_pdf(document)
                 stored = self.store_pdf(document, content)

@@ -51,6 +51,7 @@ class IngestionResult:
     created: int = 0
     changed: int = 0
     unchanged: int = 0
+    skipped: int = 0
     errors: list[str] = field(default_factory=list)
 
 

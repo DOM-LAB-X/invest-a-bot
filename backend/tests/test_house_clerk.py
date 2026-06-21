@@ -3,6 +3,7 @@ from __future__ import annotations
 import httpx
 
 from app.db.models import FilingDocument, ParserStatus
+from app.ingestion.base import StoredDocument
 from app.ingestion.house_clerk import (
     HouseClerkAdapter,
     house_pdf_url,
@@ -90,6 +91,90 @@ def test_store_pdf_writes_content_and_detects_unchanged(tmp_path) -> None:
     assert second.changed is False
     assert first.sha256 == sha256_bytes(b"pdf-content")
     assert first.storage_path.read_bytes() == b"pdf-content"
+
+
+class _ExistingIdsResult:
+    def __init__(self, values):
+        self.values = values
+
+    def scalars(self):
+        return self
+
+    def all(self):
+        return self.values
+
+
+class _ExistingIdsSession:
+    def __init__(self, existing_ids):
+        self.existing_ids = existing_ids
+        self.execute_calls = 0
+        self.committed = False
+
+    def execute(self, _statement):
+        self.execute_calls += 1
+        return _ExistingIdsResult(self.existing_ids)
+
+    def commit(self):
+        self.committed = True
+
+
+class _RecordingHouseClerkAdapter(HouseClerkAdapter):
+    def __init__(self, documents):
+        super().__init__()
+        self.documents = documents
+        self.downloaded_doc_ids: list[str] = []
+        self.persisted_doc_ids: list[str] = []
+
+    def fetch_index(self, year: int):
+        return self.documents
+
+    def download_pdf(self, document):
+        self.downloaded_doc_ids.append(document.source_document_id)
+        return f"pdf-{document.source_document_id}".encode()
+
+    def store_pdf(self, document, content):
+        return StoredDocument(
+            metadata=document,
+            storage_path=f"/tmp/{document.source_document_id}.pdf",
+            sha256="hash",
+            size_bytes=len(content),
+            created=True,
+            changed=True,
+        )
+
+    def persist_document(self, session, stored):
+        self.persisted_doc_ids.append(stored.metadata.source_document_id)
+        return FilingDocument(
+            source=stored.metadata.source,
+            source_document_id=stored.metadata.source_document_id,
+            source_url=stored.metadata.source_url,
+            filer_name=stored.metadata.filer_name,
+            chamber=stored.metadata.chamber,
+        )
+
+
+def test_ingest_year_skips_existing_documents_before_download() -> None:
+    xml = """\
+<FinancialDisclosure>
+  <Member><Name>One</Name><FilingType>P</FilingType><DocID>existing-a</DocID></Member>
+  <Member><Name>Two</Name><FilingType>P</FilingType><DocID>new-doc</DocID></Member>
+  <Member><Name>Three</Name><FilingType>P</FilingType><DocID>existing-b</DocID></Member>
+</FinancialDisclosure>
+"""
+    documents = parse_house_index_xml(xml, year=2026, index_url="index")
+    adapter = _RecordingHouseClerkAdapter(documents)
+    session = _ExistingIdsSession(existing_ids=["existing-a", "existing-b"])
+
+    result = adapter.ingest_year(session, 2026)
+
+    assert session.execute_calls == 1
+    assert adapter.downloaded_doc_ids == ["new-doc"]
+    assert adapter.persisted_doc_ids == ["new-doc"]
+    assert result.discovered == 3
+    assert result.skipped == 2
+    assert result.stored == 1
+    assert result.created == 1
+    assert session.committed is True
 
 
 class _ScalarResult:
