@@ -3,6 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from app.db.models import Alert
+from app.notifications.base import NotificationMessage
 
 DISCLAIMER = "Public disclosure alert — not investment advice."
 
@@ -72,14 +73,27 @@ def render_email_subject(alert: Alert) -> str:
     return alert_title(alert)
 
 
+def render_alert_message(alert: Alert) -> NotificationMessage:
+    return NotificationMessage(subject=render_email_subject(alert), text=render_alert_text(alert))
+
+
 def render_email_payload(alert: Alert, *, from_email: str, to_email: str) -> dict:
-    return {
-        "from": from_email,
-        "to": [to_email],
-        "subject": render_email_subject(alert),
-        "text": render_alert_text(alert),
-    }
+    message = render_alert_message(alert)
+    return render_email_message_payload(message, from_email=from_email, to_email=to_email)
+
+
+def render_email_message_payload(
+    message: NotificationMessage,
+    *,
+    from_email: str,
+    to_email: str,
+) -> dict:
+    return {"from": from_email, "to": [to_email], "subject": message.subject, "text": message.text}
 
 
 def render_slack_payload(alert: Alert) -> dict:
-    return {"text": render_alert_text(alert)}
+    return render_slack_message_payload(render_alert_message(alert))
+
+
+def render_slack_message_payload(message: NotificationMessage) -> dict:
+    return {"text": message.text}

@@ -3,9 +3,15 @@ from __future__ import annotations
 import httpx
 
 from app.core.config import Settings, settings
-from app.db.models import Alert, DeliveryChannel
-from app.notifications.base import NotificationChannel, NotificationDestination, NotificationResult, truncate_response_body
-from app.notifications.rendering import render_slack_payload
+from app.db.models import DeliveryChannel
+from app.notifications.base import (
+    NotificationChannel,
+    NotificationDestination,
+    NotificationMessage,
+    NotificationResult,
+    truncate_response_body,
+)
+from app.notifications.rendering import render_slack_message_payload
 
 
 class SlackWebhookChannel(NotificationChannel):
@@ -26,11 +32,15 @@ class SlackWebhookChannel(NotificationChannel):
             return []
         return [NotificationDestination(label="slack:webhook", hash_source=f"slack:{self.config.slack_webhook_url}")]
 
-    def send(self, alert: Alert, destination: NotificationDestination) -> NotificationResult:
+    def send_message(
+        self,
+        message: NotificationMessage,
+        destination: NotificationDestination,
+    ) -> NotificationResult:
         if not self.config.slack_webhook_url:
             return NotificationResult(sent=False, error="Slack webhook channel is not configured")
 
-        payload = render_slack_payload(alert)
+        payload = render_slack_message_payload(message)
         try:
             response = self.client.post(self.config.slack_webhook_url, json=payload)
             return NotificationResult(

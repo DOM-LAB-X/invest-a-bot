@@ -9,6 +9,12 @@ from app.db.models import Alert, DeliveryChannel
 
 
 @dataclass(frozen=True)
+class NotificationMessage:
+    subject: str
+    text: str
+
+
+@dataclass(frozen=True)
 class NotificationDestination:
     label: str
     hash_source: str
@@ -37,8 +43,18 @@ class NotificationChannel(ABC):
         """Return configured destinations. Empty means skip without creating DB rows."""
 
     @abstractmethod
+    def send_message(
+        self,
+        message: NotificationMessage,
+        destination: NotificationDestination,
+    ) -> NotificationResult:
+        """Send one rendered message to one destination."""
+
     def send(self, alert: Alert, destination: NotificationDestination) -> NotificationResult:
         """Send one alert to one destination."""
+        from app.notifications.rendering import render_alert_message
+
+        return self.send_message(render_alert_message(alert), destination)
 
 
 def truncate_response_body(value: str | None, max_length: int = 5000) -> str | None:

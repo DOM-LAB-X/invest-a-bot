@@ -18,5 +18,9 @@ class Settings(BaseSettings):
     notification_to_emails: list[str] = []
     slack_webhook_url: str | None = None
 
+    daily_digest_enabled: bool = True
+    digest_timezone: str = "America/New_York"
+    digest_top_n: int = 10
+
 
 settings = Settings()

@@ -3,9 +3,15 @@ from __future__ import annotations
 import httpx
 
 from app.core.config import Settings, settings
-from app.db.models import Alert, DeliveryChannel
-from app.notifications.base import NotificationChannel, NotificationDestination, NotificationResult, truncate_response_body
-from app.notifications.rendering import render_email_payload
+from app.db.models import DeliveryChannel
+from app.notifications.base import (
+    NotificationChannel,
+    NotificationDestination,
+    NotificationMessage,
+    NotificationResult,
+    truncate_response_body,
+)
+from app.notifications.rendering import render_email_message_payload
 
 RESEND_EMAILS_URL = "https://api.resend.com/emails"
 
@@ -36,12 +42,16 @@ class ResendEmailChannel(NotificationChannel):
             for email in self.config.notification_to_emails
         ]
 
-    def send(self, alert: Alert, destination: NotificationDestination) -> NotificationResult:
+    def send_message(
+        self,
+        message: NotificationMessage,
+        destination: NotificationDestination,
+    ) -> NotificationResult:
         if not self.config.notification_from_email or not self.config.resend_api_key:
             return NotificationResult(sent=False, error="Resend email channel is not configured")
 
-        payload = render_email_payload(
-            alert,
+        payload = render_email_message_payload(
+            message,
             from_email=self.config.notification_from_email,
             to_email=destination.label,
         )
