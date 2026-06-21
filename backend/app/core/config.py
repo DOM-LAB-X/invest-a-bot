@@ -27,5 +27,21 @@ class Settings(BaseSettings):
     # an explicit opt-in rather than a silent default.
     senate_ingestion_enabled: bool = False
 
+    enrichment_enabled: bool = True
+    enrichment_min_relevance_score: float = 60.0
+    enrichment_max_items_per_alert: int = 10
+    sec_user_agent: str = "invest-a-bot contact:dominicisaacmolina@gmail.com"
+    sec_recent_forms: list[str] = [
+        "8-K",
+        "10-Q",
+        "10-K",
+        "4",
+        "S-1",
+        "424B2",
+        "424B5",
+        "SC 13D",
+        "SC 13G",
+    ]
+
 
 settings = Settings()
