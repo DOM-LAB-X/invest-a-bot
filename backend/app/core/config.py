@@ -22,5 +22,10 @@ class Settings(BaseSettings):
     digest_timezone: str = "America/New_York"
     digest_top_n: int = 10
 
+    # Off by default: Senate eFD's access terms (5 U.S.C. app. SS 105(c)) restrict use
+    # to non-commercial purposes (or news media). Personal use is fine, but this stays
+    # an explicit opt-in rather than a silent default.
+    senate_ingestion_enabled: bool = False
+
 
 settings = Settings()
