@@ -8,5 +8,7 @@ __pycache__/
 backend/.env
 backend/data/
 
+backend/celerybeat-schedule
+
 # misc
 .DS_Store

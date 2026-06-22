@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     house_clerk_base_url: str = "https://disclosures-clerk.house.gov/public_disc/financial-pdfs"
-    house_clerk_poll_interval_seconds: int = 90
+    house_clerk_poll_interval_seconds: int = 300
 
     pdf_storage_dir: str = "./data/filings"
 
@@ -42,6 +42,12 @@ class Settings(BaseSettings):
         "SC 13D",
         "SC 13G",
     ]
+
+    celery_timezone: str = "America/New_York"
+    alert_pipeline_interval_seconds: int = 120
+    enrichment_pipeline_interval_seconds: int = 900
+    daily_digest_hour: int = 8
+    daily_digest_minute: int = 0
 
 
 settings = Settings()
